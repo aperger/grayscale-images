@@ -1,6 +1,6 @@
 # Grayscale Images
 
-Covert images to grayscale in browser - powered by Angular
+Covert images to grayscale in browser - powered by Angular - [DEMO](https://office.pergersoft.hu/grayscale-images/)
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.1.12.
 
