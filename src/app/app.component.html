@@ -1,0 +1,44 @@
+<div style="width: 100%; height: 100%; padding: 0; display: flex; flex-direction: column;">
+    <mat-toolbar sytel="flex-grow: 0;">
+        <span>Grayscale Images - OneIdentity</span>
+    </mat-toolbar>
+    <div style="align-self: stretch; display: flex; align-items: center; justify-content: center; flex-grow: 1;">
+        <mat-card style="width: 66%;">
+            <mat-card-title>Workplace</mat-card-title>
+            <mat-card-subtitle>Select an image and grayscale it...</mat-card-subtitle>
+            <mat-card-content>
+                <form [formGroup]="fileFormGroup" >
+                    <button mat-stroked-button color="accent"
+                            (click)="fileInput.click()" 
+                            >
+                        <mat-icon>attach_file</mat-icon>
+                        <span> Browse file... </span>
+                        <input type="file" hidden #fileInput
+                        (change)="fileBrowseHandler($event.target.files)">
+                    </button>
+                </form>
+            </mat-card-content>
+            <mat-card-content>
+                <p>You selected an amige called: "{{ fileName }}".</p>
+                <div style="height: 200px; max-width: 900px; overflow: auto; border: 1px solid lightgray; padding: 5px;">
+                    <img #imgUploaded [src]="imgURL" alt="The source image" style="_filter: grayscale(100%)"/>
+                </div>
+                <p>The grayscaled file:</p>
+                <div style="height: 200px; max-width: 900px; overflow: auto; border: 1px solid lightgray; padding: 5px;">
+                    <canvas #canvasUploaded></canvas>
+                </div>
+            </mat-card-content>
+            <mat-card-actions>    
+                <button mat-raised-button color="default" (click)="clear()">CLEAR SOURCE</button>
+                <button mat-raised-button color="warn" (click)="grayscale()">GRAYSCALE</button>
+                <button mat-raised-button color="primary" (click)="download()">DOWNLOAD GRAYSCALED IMAGE</button>
+            </mat-card-actions>
+        </mat-card>
+    </div>
+</div>
+
+
+
+
+
+<router-outlet></router-outlet>
