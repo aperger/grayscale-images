@@ -1,0 +1,27 @@
+.title_oneidentiy {
+    height: 32px;
+    width: 200px;
+    padding: 2px;
+    background-image: url(https://www.oneidentity.com/images/shared/oneidentity-logo.svg);
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+.main_container {
+    align-self: stretch; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    flex-grow: 1; 
+    padding: 1em;
+}
+
+.main_card {
+    width: 66%;
+}
+
+.image_container {
+    max-height: 200px; 
+    overflow: auto; 
+    border: 1px solid lightgray;
+}

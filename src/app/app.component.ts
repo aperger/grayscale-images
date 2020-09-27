@@ -1,6 +1,9 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { FormGroup } from '@angular/forms';
+import { FormControl, FormGroup } from '@angular/forms';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { DomSanitizer } from '@angular/platform-browser';
+import { DialogHelper } from './dialog-helper';
+import { GrayscaleImageServiceService } from './grayscale-image-service.service';
 
 @Component({
     selector: 'app-root',
@@ -8,8 +11,8 @@ import { DomSanitizer } from '@angular/platform-browser';
     styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
-    title = 'image-grayscale';
-    showImage = false;
+    title = 'Grayscale images';
+
     fileName: string = null;
     imgURL: ArrayBuffer | string = null;
     fileFormGroup: FormGroup = null;
@@ -23,10 +26,19 @@ export class AppComponent implements OnInit {
     @ViewChild('canvasUploaded')
     canvasRef: ElementRef<HTMLCanvasElement>;
 
-    constructor(private sanitizer: DomSanitizer) { }
+    public get showImage(): boolean {
+        return !!this.imgURL;
+    }
+
+    constructor(
+        public snackBar: MatSnackBar,
+        private grayscaleService: GrayscaleImageServiceService) { }
 
     ngOnInit(): void {
-        this.fileFormGroup = new FormGroup({});
+        console.log('ngOnInit');
+        this.fileFormGroup = new FormGroup({
+            fileInput: new FormControl(null)
+        });
     }
 
 
@@ -40,80 +52,46 @@ export class AppComponent implements OnInit {
 
         const fileSize = file.size / 1024 / 1024; // in MiB
         if (fileSize > 5) {
-            alert(`Hiba, a '${file.name}' fájl mérete túl nagy: ${fileSize.toFixed(2)} MiB! Maximum 5 MiB lehet!`);
+            DialogHelper.showMessage(this.snackBar, `Error, file ('${file.name}') size is too big: ${fileSize.toFixed(2)} MiB, Maximum 5 MiB!`, true, DialogHelper.OK, 5000);
             return;
         }
-
         this.preview(file);
-
     }
 
     preview(file: File): void {
         console.log('preview', file);
-        this.showImage = false;
 
-        const mimeType = file.type;
-        if (mimeType.match(/image\/*/) == null) {
-            alert('Only images are supported.');
-            return;
-        }
-
-
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-            this.imgURL = reader.result;
-            this.showImage = true;
+        this.grayscaleService.getUrlOfImageFile(file).subscribe((url: ArrayBuffer | string) => {
+            if (url === this.grayscaleService.ERROR_URL) {
+                DialogHelper.showMessage(this.snackBar, 'Only images are supported.', true, DialogHelper.OK, 5000);
+                this.clear();
+                return;
+            }
+            this.imgURL = url;
             this.fileName = file.name;
-        };
+        });
     }
 
     clear(): void {
+        console.log('clear');
         this.imgURL = undefined;
-        this.showImage = false;
         this.fileName = null;
+        this.fileFormGroup.get('fileInput').setValue(null);
     }
 
     download(): void {
-        const canvasEl = this.canvasRef.nativeElement;
-
-        const link = document.createElement('a');
-        link.href = canvasEl.toDataURL(); //  this.imgURL.toString();
-        link.download = 'gray_' + this.fileName;
-        link.click();
+        console.log('download');
+        this.grayscaleService.download(this.canvasRef.nativeElement, 'gray_' + this.fileName);
     }
 
     grayscale(): void {
-        const imageElement = this.imgUploadedRef.nativeElement;
-        const imgWidth = imageElement.width;
-        const imgHeight = imageElement.height;
+        console.log('grayscale');
+        this.grayscaleService.grayscale(this.imgUploadedRef.nativeElement, this.canvasRef.nativeElement);
+    }
 
-        const canvasEl = this.canvasRef.nativeElement;
-        canvasEl.width = imgWidth;
-        canvasEl.height = imgHeight;
-        const cx = canvasEl.getContext('2d');
-
-
-        cx.drawImage(imageElement, 0, 0, imageElement.width, imageElement.height);
-
-        const imageData = cx.getImageData(0, 0, imgWidth, imgHeight);
-        // This loop gets every pixels on the image and
-        for (let i = 0; i < imageData.height; i++) {
-            for (let j = 0; j < imageData.width; j++) {
-                const index = (i * 4) * imageData.width + (j * 4);
-                const red = imageData.data[index];
-                const green = imageData.data[index + 1];
-                const blue = imageData.data[index + 2];
-                const alpha = imageData.data[index + 3];
-                const average = (red + green + blue) / 3;
-                imageData.data[index] = average;
-                imageData.data[index + 1] = average;
-                imageData.data[index + 2] = average;
-                imageData.data[index + 3] = alpha;
-            }
-        }
-        cx.clearRect(0, 0, imgWidth, imgHeight);
-        cx.putImageData(imageData, 0, 0, 0, 0, imgWidth, imgHeight);
+    onImgLoadingError(event: Event) {
+        DialogHelper.showMessage(this.snackBar, 'Error at image loading: ' + this.fileName, true, DialogHelper.OK, 5000);
+        this.clear();
     }
 
 }
